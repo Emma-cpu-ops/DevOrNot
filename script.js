@@ -115,7 +115,7 @@ const chaosQuestions = expandQuestions(makeQuestions([
   "Une dépendance a 0 téléchargement hebdomadaire. Tu…|l'adoptes en pensant à sa solitude.|la mets directement en prod.|lui écris un README.",
   "Tu dois corriger une typo sur la home. Tu…|crées une issue, une branche et une cérémonie.|modifies directement la prod.|attends le prochain trimestre.",
   "Le navigateur affiche une page blanche. Tu…|ouvres la console avec un calme théâtral.|rafraîchis 27 fois.|changes de navigateur et de prénom."
-], [10, 7, 3]), 'chaos');
+], [10, 0, 0]), 'chaos');
 
 // 500 questions de développement, issues de 55 notions et de leurs variantes de contexte.
 const devQuestions = expandQuestions(makeQuestions([
@@ -174,7 +174,7 @@ const devQuestions = expandQuestions(makeQuestions([
   "Qu'est-ce que refactorer ?|Améliorer la structure sans changer le comportement attendu.|Ajouter une fonction sans tests.|Supprimer les commentaires.",
   "Quel est un intérêt de la revue de code ?|Partager les connaissances et détecter des problèmes.|Remplacer les tests.|Mesurer la frappe.",
   "Que doit contenir un README utile ?|Installation, utilisation et contribution.|Goûts musicaux de l'équipe.|Mots de passe de développement."
-], [10, 1, 4]), 'dev');
+], [10, 0, 0]), 'dev');
 
 const categories = {
   chaos: {
@@ -221,12 +221,14 @@ const resultTags = document.querySelector('#result-tags');
 const startButton = document.querySelector('#start-button');
 const restartButton = document.querySelector('#restart-button');
 const categoryButtons = document.querySelectorAll('.category-option');
+const answersReview = document.querySelector('#answers-review');
 
 let selectedCategory = null;
 let activeQuestions = [];
 let currentQuestion = 0;
 let score = 0;
 let selectedScore = null;
+let answerHistory = [];
 
 function randomQuestions(pool) {
   const usedSources = new Set();
@@ -262,6 +264,7 @@ function displayQuestion() {
     const button = document.createElement('button');
     button.className = 'answer';
     button.type = 'button';
+    button.dataset.points = points;
     button.innerHTML = '<span class="answer-letter">' + String.fromCharCode(65 + index) + '</span><span>' + label + '</span>';
     button.addEventListener('click', () => selectAnswer(button, points));
     answers.appendChild(button);
@@ -269,11 +272,34 @@ function displayQuestion() {
 }
 
 function selectAnswer(button, points) {
-  document.querySelectorAll('.answer').forEach(answer => answer.classList.remove('selected'));
+  const item = activeQuestions[currentQuestion];
+  const selectedAnswer = button.querySelector('span:last-child').textContent;
+  const correctAnswer = item.answers.find(([, answerPoints]) => answerPoints === 10)[0];
+  const isCorrect = points === 10;
+
+  document.querySelectorAll('.answer').forEach(answer => {
+    answer.disabled = true;
+    if (Number(answer.dataset.points) === 10) answer.classList.add('is-correct');
+  });
   button.classList.add('selected');
+  button.classList.add(isCorrect ? 'is-correct' : 'is-incorrect');
+  button.setAttribute('aria-label', selectedAnswer + (isCorrect ? ' — réponse correcte' : ' — réponse incorrecte'));
   selectedScore = points;
+  score += points;
+  currentScore.textContent = score;
+  answerHistory.push({ question: item.text, selectedAnswer, correctAnswer, isCorrect });
   nextButton.disabled = false;
-  tinyHint.textContent = 'Réponse enregistrée dans un endroit très peu sécurisé.';
+  tinyHint.textContent = isCorrect ? 'Correct ! +10 points.' : 'Incorrect. 0 point — la bonne réponse est affichée en vert.';
+}
+
+function renderAnswerReview() {
+  answersReview.innerHTML = '';
+  answerHistory.forEach((answer, index) => {
+    const item = document.createElement('article');
+    item.className = 'review-item';
+    item.innerHTML = '<span class="review-number">' + String(index + 1).padStart(2, '0') + '</span><div><p>' + answer.question + '</p><p class="review-answer ' + (answer.isCorrect ? 'is-correct' : 'is-incorrect') + '">' + (answer.isCorrect ? '✓ Correcte · ' : '✕ Incorrecte · ') + answer.selectedAnswer + '</p>' + (answer.isCorrect ? '' : '<p class="review-expected">Bonne réponse : ' + answer.correctAnswer + '</p>') + '</div>';
+    answersReview.appendChild(item);
+  });
 }
 
 function showResults() {
@@ -286,14 +312,13 @@ function showResults() {
   resultTitle.textContent = profile.title;
   resultCopy.textContent = profile.copy;
   resultTags.innerHTML = profile.tags.map(tag => '<span>' + tag + '</span>').join('');
+  renderAnswerReview();
   restartButton.innerHTML = 'Nouveau tirage <span aria-hidden="true">↻</span>';
-  resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function advanceQuiz() {
   if (selectedScore === null) return;
-  score += selectedScore;
-  currentScore.textContent = score;
   if (currentQuestion === QUESTION_COUNT - 1) {
     showResults();
     return;
@@ -308,6 +333,7 @@ function startQuiz() {
   activeQuestions = randomQuestions(categories[selectedCategory].questions);
   currentQuestion = 0;
   score = 0;
+  answerHistory = [];
   currentScore.textContent = score;
   resultCard.hidden = true;
   quizFrame.hidden = false;
