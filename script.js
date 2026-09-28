@@ -6,7 +6,7 @@ function makeQuestions(lines, scores) {
     const parts = line.split('|');
     return {
       text: parts[0],
-      answers: parts.slice(1).map((answer, index) => [answer, scores[index]]),
+      answers: parts.slice(1).map((answer, index) => [answer, scores[index], index]),
       source
     };
   });
@@ -181,12 +181,12 @@ const categories = {
     name: 'Code & chaos',
     hint: 'Choisis avec ton cœur. Ou avec Stack Overflow.',
     questions: chaosQuestions,
-    profiles: [
-      { min: 0, emoji: '🧯', title: 'Stagiaire du chaos organisé', copy: "Tu n'as peut-être pas résolu le bug, mais tu as identifié son énergie. Un console.log bien placé est déjà une forme de cartographie.", tags: ['panique élégante', 'café prudent', 'branche à surveiller'] },
-      { min: 46, emoji: '🧑‍💻', title: 'Développeur probablement fonctionnel', copy: "Tu reconnais un faux petit changement, un TODO historique et une réunion qui aurait dû être un message. Ton code a des secrets, mais il les assume.", tags: ['debug instinctif', 'TODO réaliste', 'survie en prod'] },
-      { min: 71, emoji: '🧙', title: 'Sorcier du terminal certifié-ish', copy: "Tu as le sens du commit, l'instinct du rollback et la méfiance saine envers les déploiements du vendredi. Tes erreurs ont peur de toi.", tags: ['rebase mystique', 'merge élégant', 'humour défensif'] },
-      { min: 91, emoji: '🦄', title: 'Légende du code intergalactique', copy: "Tu es soit un vrai développeur, soit trois chats dans un trench-coat qui ont lu toute la documentation. Dans les deux cas, respect.", tags: ['prod apaisée', 'regex domptée', 'branche protégée'] }
-    ]
+    profiles: {
+      methodique: { emoji: '🔍', title: 'Détective des bugs évaporés', copy: "Tes réponses révèlent un goût pour l'enquête, les précautions et les phrases qui commencent par « attend, je vérifie ». La codebase te doit probablement une bougie parfumée.", tags: ['instinct d’enquête', 'calme relatif', 'console maîtrisée'] },
+      pragmatique: { emoji: '☕', title: 'Pragmatique du commit de minuit', copy: "Tu sembles avoir une solution pour tout, à condition qu'elle fonctionne avant le prochain café. C'est une philosophie parfaitement défendable.", tags: ['quick fix assumé', 'café stratégique', 'efficacité souple'] },
+      chaotique: { emoji: '☄️', title: 'Agent du chaos avec accès prod', copy: "Tes choix possèdent l'énergie d'une branche nommée final-v3 et d'un déploiement fait à l'instinct. Rien ne t'arrête, surtout pas les conventions.", tags: ['audace maximale', 'z-index élevé', 'production nerveuse'] },
+      equilibre: { emoji: '🎭', title: 'Équilibriste de la codebase', copy: "Impossible de te ranger dans une seule case : tu alternes sagesse, panache et légère fuite en avant. La vraie polyvalence, c'est peut-être ça.", tags: ['multi-classe', 'imprévisible juste assez', 'légende locale'] }
+    }
   },
   dev: {
     name: 'Vrai développement',
@@ -222,6 +222,9 @@ const startButton = document.querySelector('#start-button');
 const restartButton = document.querySelector('#restart-button');
 const categoryButtons = document.querySelectorAll('.category-option');
 const answersReview = document.querySelector('#answers-review');
+const scoreIcon = document.querySelector('#score-icon');
+const scoreSuffix = document.querySelector('#score-suffix');
+const resultScoreLabel = document.querySelector('#result-score-label');
 
 let selectedCategory = null;
 let activeQuestions = [];
@@ -229,6 +232,7 @@ let currentQuestion = 0;
 let score = 0;
 let selectedScore = null;
 let answerHistory = [];
+let chaosTally = { methodique: 0, pragmatique: 0, chaotique: 0 };
 
 function randomQuestions(pool) {
   const usedSources = new Set();
@@ -260,36 +264,47 @@ function displayQuestion() {
   selectedScore = null;
   answers.innerHTML = '';
 
-  item.answers.forEach(([label, points], index) => {
+  item.answers.forEach(([label, points, choiceIndex], index) => {
     const button = document.createElement('button');
     button.className = 'answer';
     button.type = 'button';
     button.dataset.points = points;
     button.innerHTML = '<span class="answer-letter">' + String.fromCharCode(65 + index) + '</span><span>' + label + '</span>';
-    button.addEventListener('click', () => selectAnswer(button, points));
+    button.addEventListener('click', () => selectAnswer(button, points, choiceIndex));
     answers.appendChild(button);
   });
 }
 
-function selectAnswer(button, points) {
+function selectAnswer(button, points, choiceIndex) {
   const item = activeQuestions[currentQuestion];
   const selectedAnswer = button.querySelector('span:last-child').textContent;
-  const correctAnswer = item.answers.find(([, answerPoints]) => answerPoints === 10)[0];
+  const isChaos = selectedCategory === 'chaos';
+  const correctAnswer = isChaos ? null : item.answers.find(([, answerPoints]) => answerPoints === 10)[0];
   const isCorrect = points === 10;
 
   document.querySelectorAll('.answer').forEach(answer => {
     answer.disabled = true;
-    if (Number(answer.dataset.points) === 10) answer.classList.add('is-correct');
+    if (!isChaos && Number(answer.dataset.points) === 10) answer.classList.add('is-correct');
   });
   button.classList.add('selected');
-  button.classList.add(isCorrect ? 'is-correct' : 'is-incorrect');
-  button.setAttribute('aria-label', selectedAnswer + (isCorrect ? ' — réponse correcte' : ' — réponse incorrecte'));
-  selectedScore = points;
-  score += points;
-  currentScore.textContent = score;
-  answerHistory.push({ question: item.text, selectedAnswer, correctAnswer, isCorrect });
+  if (isChaos) {
+    const trait = ['methodique', 'pragmatique', 'chaotique'][choiceIndex];
+    chaosTally[trait] += 1;
+    button.classList.add('is-chaos-choice');
+    button.setAttribute('aria-label', selectedAnswer + ' — choix enregistré');
+    selectedScore = 0;
+    answerHistory.push({ question: item.text, selectedAnswer, isScored: false });
+    tinyHint.textContent = 'Choix enregistré. Ici, il n’y a pas de mauvaise réponse.';
+  } else {
+    button.classList.add(isCorrect ? 'is-correct' : 'is-incorrect');
+    button.setAttribute('aria-label', selectedAnswer + (isCorrect ? ' — réponse correcte' : ' — réponse incorrecte'));
+    selectedScore = points;
+    score += points;
+    currentScore.textContent = score;
+    answerHistory.push({ question: item.text, selectedAnswer, correctAnswer, isCorrect, isScored: true });
+    tinyHint.textContent = isCorrect ? 'Correct ! +10 points.' : 'Incorrect. 0 point — la bonne réponse est affichée en vert.';
+  }
   nextButton.disabled = false;
-  tinyHint.textContent = isCorrect ? 'Correct ! +10 points.' : 'Incorrect. 0 point — la bonne réponse est affichée en vert.';
 }
 
 function renderAnswerReview() {
@@ -297,18 +312,31 @@ function renderAnswerReview() {
   answerHistory.forEach((answer, index) => {
     const item = document.createElement('article');
     item.className = 'review-item';
-    item.innerHTML = '<span class="review-number">' + String(index + 1).padStart(2, '0') + '</span><div><p>' + answer.question + '</p><p class="review-answer ' + (answer.isCorrect ? 'is-correct' : 'is-incorrect') + '">' + (answer.isCorrect ? '✓ Correcte · ' : '✕ Incorrecte · ') + answer.selectedAnswer + '</p>' + (answer.isCorrect ? '' : '<p class="review-expected">Bonne réponse : ' + answer.correctAnswer + '</p>') + '</div>';
+    const answerStatus = answer.isScored
+      ? '<p class="review-answer ' + (answer.isCorrect ? 'is-correct' : 'is-incorrect') + '">' + (answer.isCorrect ? '✓ Correcte · ' : '✕ Incorrecte · ') + answer.selectedAnswer + '</p>' + (answer.isCorrect ? '' : '<p class="review-expected">Bonne réponse : ' + answer.correctAnswer + '</p>')
+      : '<p class="review-answer">Ton choix · ' + answer.selectedAnswer + '</p>';
+    item.innerHTML = '<span class="review-number">' + String(index + 1).padStart(2, '0') + '</span><div><p>' + answer.question + '</p>' + answerStatus + '</div>';
     answersReview.appendChild(item);
   });
 }
 
+function getChaosProfile() {
+  const rankedTraits = Object.entries(chaosTally).sort(([, first], [, second]) => second - first);
+  const isTie = rankedTraits[0][1] === rankedTraits[1][1];
+  return categories.chaos.profiles[isTie ? 'equilibre' : rankedTraits[0][0]];
+}
+
 function showResults() {
+  const isChaos = selectedCategory === 'chaos';
   const finalScore = Math.round((score / (QUESTION_COUNT * 10)) * 100);
-  const profile = [...categories[selectedCategory].profiles].reverse().find(item => finalScore >= item.min);
+  const profile = isChaos
+    ? getChaosProfile()
+    : [...categories.dev.profiles].reverse().find(item => finalScore >= item.min);
   quizFrame.hidden = true;
   resultCard.hidden = false;
   resultEmoji.textContent = profile.emoji;
-  scoreNumber.textContent = finalScore;
+  scoreNumber.textContent = isChaos ? '✦' : finalScore;
+  resultScoreLabel.textContent = isChaos ? 'profil' : '/ 100';
   resultTitle.textContent = profile.title;
   resultCopy.textContent = profile.copy;
   resultTags.innerHTML = profile.tags.map(tag => '<span>' + tag + '</span>').join('');
@@ -334,7 +362,11 @@ function startQuiz() {
   currentQuestion = 0;
   score = 0;
   answerHistory = [];
+  chaosTally = { methodique: 0, pragmatique: 0, chaotique: 0 };
   currentScore.textContent = score;
+  scoreIcon.textContent = selectedCategory === 'chaos' ? '☄' : '✦';
+  currentScore.textContent = selectedCategory === 'chaos' ? '—' : score;
+  scoreSuffix.textContent = selectedCategory === 'chaos' ? 'profil en cours' : 'pts';
   resultCard.hidden = true;
   quizFrame.hidden = false;
   tinyHint.textContent = categories[selectedCategory].hint;
