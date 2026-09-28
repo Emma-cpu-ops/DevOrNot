@@ -21,13 +21,27 @@
         <div class="intro-copy">
           <p class="eyebrow">Le test de compétence le moins homologué d'internet</p>
           <h1>Es-tu un <em>vrai</em><br />développeur ?</h1>
-          <p class="lede">Dix questions parfaitement inutiles pour mesurer ton niveau de code, de café et de mauvaise foi technique.</p>
+          <p class="lede">Choisis ton parcours, puis affronte dix questions tirées au hasard. De quoi tester tes réflexes de dev — ou seulement ta mauvaise foi.</p>
           <div class="facts" aria-label="Informations du quiz">
             <span><b>10</b> questions</span>
             <span><b>2 min</b> de doute</span>
-            <span><b>0%</b> de science</span>
+            <span><b>1 000</b> questions en réserve</span>
           </div>
-          <button class="start-button" id="start-button" type="button">Je prends le risque <span aria-hidden="true">→</span></button>
+          <fieldset class="category-picker" aria-describedby="category-help">
+            <legend>Choisis ton parcours</legend>
+            <div class="category-options">
+              <button class="category-option" type="button" data-category="chaos" aria-pressed="false">
+                <span class="category-icon" aria-hidden="true">☄</span>
+                <span><b>Code &amp; chaos</b><small>500 questions absurdes</small></span>
+              </button>
+              <button class="category-option" type="button" data-category="dev" aria-pressed="false">
+                <span class="category-icon" aria-hidden="true">⌘</span>
+                <span><b>Vrai développement</b><small>500 questions techniques</small></span>
+              </button>
+            </div>
+            <p id="category-help">Tu pourras refaire le test : les questions changent à chaque tirage.</p>
+          </fieldset>
+          <button class="start-button" id="start-button" type="button" disabled>Choisis un parcours <span aria-hidden="true">→</span></button>
         </div>
 
         <aside class="terminal-card" aria-label="Aperçu du diagnostic">
@@ -47,8 +61,8 @@
         <div class="quiz-frame" id="quiz-frame">
           <header class="quiz-head">
             <div>
-              <p class="eyebrow">Question <span id="question-number">01</span> / 10</p>
-              <h2 id="quiz-title">Chargement de ton niveau de légende…</h2>
+              <p class="eyebrow"><span id="quiz-category">Parcours à choisir</span> · Question <span id="question-number">01</span> / 10</p>
+              <h2 id="quiz-title">Choisis un parcours pour commencer.</h2>
             </div>
             <div class="score-chip" aria-label="Points collectés"><span aria-hidden="true">✦</span> <strong id="current-score">0</strong> pts</div>
           </header>
