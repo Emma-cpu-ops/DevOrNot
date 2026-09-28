@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Es-tu un vrai développeur ? Le quiz qui ne prouve absolument rien." />
+    <title>Dev or Not — Es-tu un vrai développeur ?</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="site-shell">
+      <nav class="nav" aria-label="Navigation principale">
+        <a class="brand" href="#top" aria-label="Dev or Not, accueil">
+          <span class="brand-brackets" aria-hidden="true">&lt;/&gt;</span>
+          <span>dev<span>or</span>not</span>
+        </a>
+        <span class="nav-label"><i></i> diagnostic certifié douteux</span>
+      </nav>
+
+      <section class="intro" id="top" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <p class="eyebrow">Le test de compétence le moins homologué d'internet</p>
+          <h1>Es-tu un <em>vrai</em><br />développeur ?</h1>
+          <p class="lede">Dix questions parfaitement inutiles pour mesurer ton niveau de code, de café et de mauvaise foi technique.</p>
+          <div class="facts" aria-label="Informations du quiz">
+            <span><b>10</b> questions</span>
+            <span><b>2 min</b> de doute</span>
+            <span><b>0%</b> de science</span>
+          </div>
+          <button class="start-button" id="start-button" type="button">Je prends le risque <span aria-hidden="true">→</span></button>
+        </div>
+
+        <aside class="terminal-card" aria-label="Aperçu du diagnostic">
+          <div class="terminal-top"><span class="lights" aria-hidden="true"><i></i><i></i><i></i></span><span>dev-check.sh</span><span>● live</span></div>
+          <div class="terminal-content">
+            <p><span class="prompt">$</span> whoami</p>
+            <p class="response">probably-a-developer</p>
+            <p><span class="prompt">$</span> confidence --level</p>
+            <p class="response accent">suspiciously high</p>
+            <p><span class="prompt">$</span><span class="cursor"></span></p>
+          </div>
+          <p class="terminal-foot">Aucun clavier n'a été évalué pendant ce test.</p>
+        </aside>
+      </section>
+
+      <section class="quiz-area" id="quiz" aria-labelledby="quiz-title">
+        <div class="quiz-frame" id="quiz-frame">
+          <header class="quiz-head">
+            <div>
+              <p class="eyebrow">Question <span id="question-number">01</span> / 10</p>
+              <h2 id="quiz-title">Chargement de ton niveau de légende…</h2>
+            </div>
+            <div class="score-chip" aria-label="Points collectés"><span aria-hidden="true">✦</span> <strong id="current-score">0</strong> pts</div>
+          </header>
+
+          <div class="progress-track" aria-label="Progression du quiz"><i id="progress-bar"></i></div>
+
+          <div class="question-card" id="question-card" aria-live="polite">
+            <p class="question-kicker" id="question-kicker">SITUATION CRITIQUE N°01</p>
+            <h3 id="question-text"></h3>
+            <div class="answers" id="answers" role="group" aria-label="Réponses possibles"></div>
+          </div>
+
+          <div class="quiz-footer">
+            <p id="tiny-hint">Choisis avec ton cœur. Ou avec Stack Overflow.</p>
+            <button class="next-button" id="next-button" type="button" disabled>Question suivante <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+
+        <section class="result-card" id="result-card" hidden aria-live="polite" aria-labelledby="result-title">
+          <div class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="eyebrow">Verdict du comité très sérieux</p>
+          <div class="result-orbit"><span id="result-emoji">🧑‍💻</span><b id="score-number">0</b><small>/ 100</small></div>
+          <h2 id="result-title">Analyse de ton profil en cours…</h2>
+          <p class="result-copy" id="result-copy"></p>
+          <div class="result-tags" id="result-tags"></div>
+          <button class="restart-button" id="restart-button" type="button">Repasser le test <span aria-hidden="true">↻</span></button>
+          <p class="fine-print">Résultat valable jusqu'à ce que quelqu'un ouvre un ticket urgent.</p>
+        </section>
+      </section>
+
+      <section class="disclaimer" aria-labelledby="disclaimer-title">
+        <span class="disclaimer-icon" aria-hidden="true">!</span>
+        <div>
+          <p class="eyebrow">Information importante</p>
+          <h2 id="disclaimer-title">Ce test ne recrute personne.</h2>
+          <p>Mais il peut justifier une pause-café, une reconversion en plante verte ou l'ouverture d'un onglet de documentation.</p>
+        </div>
+      </section>
+
+      <footer><span>© 2026 Dev or Not Labs</span><span>Propulsé par du café et des <code>console.log</code>.</span></footer>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
